@@ -4,6 +4,20 @@ import time
 import ST7789VW
 import INA219
 
+
+def fit_value_to_screen(value: float) -> str:
+    value_prepend_space: str = "" if value < 0 else " "
+    value_raw_str: str = "{:.2f}".format(value)
+    if abs(value) > 1000:
+        value_raw_str = str(int(value))
+    elif abs(value) > 100:
+        value_raw_str = "{:.0f}".format(value)
+    elif abs(value) > 10:
+        value_raw_str = "{:.1f}".format(value)
+
+    return value_prepend_space + value_raw_str
+
+
 if __name__ == "__main__":
 
     # Setup the LCD screen
@@ -17,30 +31,46 @@ if __name__ == "__main__":
     INA.sleep()
 
     # color BRG
-    LCD.fill(LCD.WHITE)
+    LCD.fill(LCD.CYAN)
     LCD.rect(10, 5, 150, 30, LCD.RED, True)
     LCD.text("Raspberry Pi Pico", 20, 17, LCD.WHITE)
-    display_color = 0x001F
-    LCD.write_text(text="HELLO", x=10, y=50, size=5, color=LCD.BLACK)
+    display_color = LCD.WHITE
+    LCD.write_text(text="PowerMon", x=10, y=50, size=3, color=LCD.BLACK)
     for i in range(0, 12):
         LCD.rect(i * 30 + 60, 100, 30, 50, (display_color), True)
         display_color = display_color << 1
     LCD.show()
-    time.sleep(1)
+    time.sleep(3)
 
     while True:
         INA.wake()
-        ina_voltage: float = INA.voltage()
+        ina_voltage: float = INA.supply_voltage()
         ina_current: float = INA.current()
         ina_power: float = INA.power()
 
-        LCD.fill(LCD.WHITE)
-        LCD.write_text(text=f"{ina_voltage:.2f} V", x=10, y=20, size=3, color=LCD.BLACK)
+        LCD.fill(LCD.BLACK)
         LCD.write_text(
-            text=f"{ina_current:.2f} mA", x=10, y=60, size=3, color=LCD.GREEN
+            text=f"V :{fit_value_to_screen(ina_voltage)}",
+            x=10,
+            y=20,
+            size=3,
+            color=LCD.WHITE,
         )
-        LCD.write_text(text=f"{ina_power:.2f} mW", x=10, y=100, size=3, color=LCD.CYAN)
+        LCD.write_text(
+            text=f"mA:{fit_value_to_screen(ina_current)}",
+            x=10,
+            y=60,
+            size=3,
+            color=LCD.WHITE,
+        )
+        LCD.write_text(
+            text=f"mW:{fit_value_to_screen(ina_power)}",
+            x=10,
+            y=100,
+            size=3,
+            color=LCD.WHITE,
+        )
         LCD.show()
 
         INA.sleep()
-        time.sleep(1)
+        time.sleep(0.1)
